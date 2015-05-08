@@ -1,5 +1,5 @@
 Numero de documentos del corpus :2
-Número de palabras del corpus:2897
+Nï¿½mero de palabras del corpus:2897
 Palabra:0 Frec:1 LogProb:-9.337677620437377
 Palabra:0034 Frec:1 LogProb:-9.337677620437377
 Palabra:02 Frec:1 LogProb:-9.337677620437377

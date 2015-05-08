@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
@@ -17,7 +18,8 @@ public class CorpusinsnorLoader {
 	public static final String OUTPUT_VOC_PATH = "files/vocabulario.txt";
 	public static final int INSULTO = 1;
 	public static final int NO_INSULTO = 0;
-	private static final String ADDITIONAL_SPLIT_REGX = "(\\.)+ (\\,)*(\\\\)*(\\\")*";
+	// private static final String ADDITIONAL_SPLIT_REGX =
+	// "(\\.)+ (\\,)*(\\\\)*(\\\")*";
 	public static final String DELETED_CHARACTERS = "[^\\w\\s]";
 	private static final String INPUT_FILE_CORPUS_TODO_PATH = "files/corpustodo.txt";
 
@@ -33,12 +35,16 @@ public class CorpusinsnorLoader {
 			while ((line = br.readLine()) != null) {
 				switch (Integer.parseInt(line.split(",", 3)[0])) {
 				case INSULTO:
-					pwins.write("Texto:" + line.split(",", 3)[2].substring(3, line.split(",", 3)[2].length()-4)
+					pwins.write("Texto:"
+							+ line.split(",", 3)[2].substring(3,
+									line.split(",", 3)[2].length() - 4)
 							+ System.getProperty("line.separator"));
 					break;
 
 				case NO_INSULTO:
-					pwnor.write("Texto:" + line.split(",", 3)[2].substring(3, line.split(",", 3)[2].length()-4)
+					pwnor.write("Texto:"
+							+ line.split(",", 3)[2].substring(3,
+									line.split(",", 3)[2].length() - 4)
 							+ System.getProperty("line.separator"));
 					break;
 				}
@@ -91,7 +97,8 @@ public class CorpusinsnorLoader {
 			e.printStackTrace();
 		}
 	}
-	public static void learn(String[] fileClassPath,String[] fileClassOutput) {
+
+	public static void learn(String[] fileClassPath, String[] fileClassOutput) {
 		try {
 			BufferedReader brvoc = new BufferedReader(new FileReader(new File(
 					OUTPUT_VOC_PATH)));
@@ -101,37 +108,111 @@ public class CorpusinsnorLoader {
 				vocabSize++;
 			}
 			brvoc.close();
-			for(int i = 0; i< fileClassPath.length; i++){
-			BufferedReader br = new BufferedReader(new FileReader(new File(
-					fileClassPath[i])));
-			PrintWriter pwlearning = new PrintWriter(new FileWriter(fileClassOutput[i]));
-			br.readLine();
-			int words = 0;
-			TreeMap<String, Integer> stringsCount = new TreeMap();
-			
-			while ((line = br.readLine()) != null) {
-				words++;
-				line = line.split(":")[1];
-				StringTokenizer tokens = new StringTokenizer(line.replaceAll(
-						DELETED_CHARACTERS, ""));
-				while (tokens.hasMoreTokens()) {
-					String thisToken = tokens.nextToken();
-					Integer count = stringsCount.get(thisToken);
-					if (count == null)
-						stringsCount.put(thisToken, 1);
-					else
-						stringsCount.put(thisToken, count + 1);
-				}
+			for (int i = 0; i < fileClassPath.length; i++) {
+				BufferedReader br = new BufferedReader(new FileReader(new File(
+						fileClassPath[i])));
+				PrintWriter pwlearning = new PrintWriter(new FileWriter(
+						fileClassOutput[i]));
+				br.readLine();
+				int words = 0;
+				TreeMap<String, Integer> stringsCount = new TreeMap();
 
+				while ((line = br.readLine()) != null) {
+					words++;
+					line = line.split(":")[1];
+					StringTokenizer tokens = new StringTokenizer(
+							line.replaceAll(DELETED_CHARACTERS, ""));
+					while (tokens.hasMoreTokens()) {
+						String thisToken = tokens.nextToken();
+						Integer count = stringsCount.get(thisToken);
+						if (count == null)
+							stringsCount.put(thisToken, 1);
+						else
+							stringsCount.put(thisToken, count + 1);
+					}
+
+				}
+				pwlearning.write("Numero de documentos del corpus :"
+						+ fileClassPath.length
+						+ System.getProperty("line.separator")
+						+ "Nï¿½mero de palabras del corpus:" + words
+						+ System.getProperty("line.separator"));
+				for (Entry<String, Integer> entry : stringsCount.entrySet()) {
+					pwlearning
+							.write("Palabra:"
+									+ entry.getKey()
+									+ " Frec:"
+									+ entry.getValue()
+									+ " LogProb:"
+									+ Math.log(((double) (entry.getValue() + 1) / (vocabSize + words)))
+									+ System.getProperty("line.separator"));
+				}
+				br.close();
+				pwlearning.close();
 			}
-			pwlearning.write("Numero de documentos del corpus :" + fileClassPath.length +System.getProperty("line.separator")+"Número de palabras del corpus:"+words+System.getProperty("line.separator"));
-			for (Entry<String, Integer> entry : stringsCount.entrySet()) {
-				pwlearning.write("Palabra:" + entry.getKey()
-						+ " Frec:" + entry.getValue() + " LogProb:" + Math.log(((double)(entry.getValue() +1)/(vocabSize+words)))+ System.getProperty("line.separator"));
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void classify(String[] filLearnedPath, String fileInput,
+			String fileClassOutput) {
+		try {
+			PrintWriter pwlearning = new PrintWriter(new FileWriter(fileClassOutput));
+			ArrayList<TreeMap<String, Double>> learnedData = new ArrayList<TreeMap<String, Double>>();
+			String line;
+			for (int i = 0; i < filLearnedPath.length; i++) {
+				learnedData.add(new TreeMap<String, Double>());
+				BufferedReader br = new BufferedReader(new FileReader(new File(
+						filLearnedPath[i])));
+				br.readLine();
+				br.readLine();
+				int words = 0;
+				while ((line = br.readLine()) != null) {
+					words++;
+					StringTokenizer tokens = new StringTokenizer(
+							line.replaceAll(DELETED_CHARACTERS, ""));
+					String palabra = tokens.nextToken().replaceAll("Palabra", "");;
+					tokens.nextToken();
+					String doble = tokens.nextToken().replaceAll("LogProb", "-");
+						learnedData.get(i).put(palabra, Double.parseDouble(doble));
+//						System.out.println(palabra +" || " + doble);
+					
+				}
+				br.close();
 			}
-			br.close();
-			pwlearning.close();
-			}
+			BufferedReader brinput = new BufferedReader(new FileReader(
+					new File(fileInput)));
+				while ((line = brinput.readLine()) != null) {
+					line = line.split(":")[1];
+					StringTokenizer tokens = new StringTokenizer(
+							line.replaceAll(DELETED_CHARACTERS, ""));
+					double [] logprob = new double[filLearnedPath.length];
+					
+					while (tokens.hasMoreTokens()) {
+						String thisToken = tokens.nextToken();
+						for (int i = 0; i < filLearnedPath.length; i++) {
+							Double addin = learnedData.get(i).get(thisToken);
+							if(addin != null)
+								logprob[i]  += addin;
+						}
+						
+					}
+					
+						int maxIndex = 0;
+						double lastmax = Double.MIN_VALUE;
+						for(int i = 0;i < filLearnedPath.length;i++){
+							if(logprob[i]>lastmax){
+								maxIndex = i;
+								lastmax = logprob[i];
+							}
+						}
+						pwlearning.write("Clase:" +  filLearnedPath[maxIndex]+"Texto:" +line+System.getProperty("line.separator"));
+				}
+				pwlearning.close();
+				brinput.close();
+				
 
 		} catch (IOException e) {
 			e.printStackTrace();
