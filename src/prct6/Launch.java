@@ -16,6 +16,7 @@ public class Launch {
 		CorpusinsnorLoader.buildVoc();
 		CorpusinsnorLoader.learn(corpusFilePaths, learningOutputFilePaths);
 		CorpusinsnorLoader.classify(learningOutputFilePaths, "files/testCorpus.txt", "files/clasificacion.txt");
+		Rendimiento.print("files/clasificacion.txt","files/clasificacion_ok.txt" );
 	}
 
 }

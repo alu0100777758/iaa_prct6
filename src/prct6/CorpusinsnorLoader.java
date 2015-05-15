@@ -208,7 +208,7 @@ public class CorpusinsnorLoader {
 								lastmax = logprob[i];
 							}
 						}
-						pwlearning.write("Clase:" +  filLearnedPath[maxIndex]+"Texto:" +line+System.getProperty("line.separator"));
+						pwlearning.write("Clase:" +  filLearnedPath[maxIndex].substring(filLearnedPath[maxIndex].length()-7,filLearnedPath[maxIndex].length()-4)+" Texto:" +line+System.getProperty("line.separator"));
 				}
 				pwlearning.close();
 				brinput.close();
